@@ -128,13 +128,12 @@ function WizardSidebar({
 function ExistingAppSidebar({
   app,
   onConfirm, confirming,
-  onShip, shipping,
+  shipping,
   onOpenShipModal,
 }: {
   app: Application;
   onConfirm: (id: string) => void;
   confirming: boolean;
-  onShip: (id: string) => void;
   shipping: boolean;
   onOpenShipModal: () => void;
 }) {
@@ -835,7 +834,6 @@ export function BloggerSlotPage() {
                   app={existingApp}
                   onConfirm={confirm}
                   confirming={confirming}
-                  onShip={ship}
                   shipping={shipping}
                   onOpenShipModal={() => setShipModalOpen(true)}
                 />

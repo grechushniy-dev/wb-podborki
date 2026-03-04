@@ -147,14 +147,13 @@ function AppTableHeader() {
 // ── Application blogger row ───────────────────────────────────────────────────
 
 function AppBloggerRow({
-  app, slot, collection,
+  app, slot,
   onConfirm, confirming,
   onShip, shipping,
   onRejectionOpen,
 }: {
   app: Application;
   slot: BloggerSlot | undefined;
-  collection: Collection | undefined;
   onConfirm: (id: string) => void;
   confirming: boolean;
   onShip: (app: Application) => void;
@@ -368,7 +367,6 @@ function AppCollectionCard({
                 key={app.id}
                 app={app}
                 slot={slot}
-                collection={collection}
                 onConfirm={onConfirm}
                 confirming={confirming}
                 onShip={onShip}

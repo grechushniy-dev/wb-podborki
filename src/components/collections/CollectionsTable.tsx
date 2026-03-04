@@ -34,33 +34,6 @@ function colStyle(flex: number, align: 'left' | 'right' | 'center' = 'left') {
   return { flex, textAlign: align as React.CSSProperties['textAlign'], minWidth: 0 };
 }
 
-// ── Shared row wrapper ────────────────────────────────────────────────────────
-
-function SlotRow({
-  children,
-  onClick,
-}: {
-  children: React.ReactNode;
-  onClick: () => void;
-}) {
-  return (
-    <div
-      onClick={onClick}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 10,
-        padding: '10px 4px', cursor: 'pointer',
-        borderBottom: '1px solid #f5f5f5', borderRadius: 4,
-        transition: 'background 0.12s',
-      }}
-      onMouseEnter={e => (e.currentTarget.style.background = '#fafafa')}
-      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-    >
-      <div style={{ width: COL.avatar, flexShrink: 0 }} />
-      {children}
-    </div>
-  );
-}
-
 // ── Table header ──────────────────────────────────────────────────────────────
 
 function SlotTableHeader() {
