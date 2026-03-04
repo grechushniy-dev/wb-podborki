@@ -12,10 +12,8 @@ import './index.css';
 dayjs.locale('ru');
 
 async function prepare() {
-  if (import.meta.env.DEV) {
-    const { worker } = await import('./mocks/browser');
-    return worker.start({ onUnhandledRequest: 'bypass' });
-  }
+  const { worker } = await import('./mocks/browser');
+  return worker.start({ onUnhandledRequest: 'bypass' });
 }
 
 const queryClient = new QueryClient({
