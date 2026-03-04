@@ -35,6 +35,22 @@ export interface Collection {
   updated_at: string;
 }
 
+export interface ProductStats {
+  product_id: string;
+  views: number;
+  orders: number;
+  likes: number;
+  revenue: number;
+}
+
+export interface ApplicationStats {
+  views: number;
+  orders: number;
+  likes: number;
+  revenue: number;
+  by_product: ProductStats[];
+}
+
 export interface Application {
   id: string;
   collection_id: string;
@@ -49,12 +65,15 @@ export interface Application {
   gift_product_ids: string[];
   product_ids: string[];
   status: ApplicationStatus;
+  accepted_product_ids: string[] | null; // null = ещё не решено, [] = никакие, [...] = принятые
   confirmed_at: string | null;
   shipped_at: string | null;
   post_url: string | null;
   published_at: string | null;
   rejected_at: string | null;
+  rejected_reason: string | null;
   created_at: string;
+  stats: ApplicationStats | null;
 }
 
 export interface SellerProduct {

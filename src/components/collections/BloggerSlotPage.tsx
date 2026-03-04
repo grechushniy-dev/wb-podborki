@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Alert, Avatar, Button, Card, Checkbox, Divider, InputNumber,
-  Modal, Popconfirm, Radio, Skeleton, Space, Steps, Tag, Tooltip, Typography,
+  Modal, Popconfirm, Radio, Skeleton, Space, Steps, Table, Tag, Tooltip, Typography,
 } from 'antd';
 import {
   ArrowLeftOutlined, ArrowRightOutlined, CalendarOutlined, CheckCircleOutlined,
-  EyeOutlined, GiftOutlined, InfoCircleOutlined, LinkOutlined, PlusOutlined, SendOutlined,
+  EyeOutlined, GiftOutlined, HeartOutlined, InfoCircleOutlined, LinkOutlined,
+  PlusOutlined, RiseOutlined, SendOutlined, ShoppingCartOutlined,
   ShoppingOutlined, StarFilled, UserOutlined, VideoCameraOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -16,7 +17,7 @@ import { useAllSellerProducts } from '@/api/seller';
 import { ShipModal } from '@/components/applications/ShipModal';
 import { applicationStatusConfig, collectionStatusConfig } from '@/utils/statusConfig';
 import { useCollectionsStore } from '@/store/collectionsStore';
-import type { Application, BloggerSlot, Collection, SellerProduct } from '@/types';
+import type { Application, ApplicationStatus, BloggerSlot, Collection, SellerProduct } from '@/types';
 
 const { Title, Text, Link, Paragraph } = Typography;
 
@@ -166,6 +167,14 @@ function ExistingAppSidebar({
           <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>Дата публикации</Text>
           <Text style={{ fontSize: 12, fontWeight: 500 }}>{dayjs(app.collection_publication_date).format('D MMM YYYY')}</Text>
         </div>
+        {app.accepted_product_ids !== null && (
+          <div>
+            <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>Принято блогером</Text>
+            <Text style={{ fontSize: 12, fontWeight: 500 }}>
+              {app.accepted_product_ids.length} из {app.product_ids.length} товар(а)
+            </Text>
+          </div>
+        )}
         {app.gift_product && (
           <div>
             <Text type="secondary" style={{ fontSize: 11, display: 'block' }}>Подарок блогеру</Text>
@@ -542,6 +551,116 @@ function Step3Content({
 
 // ── Existing application detail view ─────────────────────────────────────────
 
+const STATS_STATUSES: ApplicationStatus[] = ['shipped', 'published', 'completed'];
+
+function StatsTable({
+  app, allProducts,
+}: {
+  app: Application;
+  allProducts: SellerProduct[];
+}) {
+  if (!app.stats || !STATS_STATUSES.includes(app.status)) return null;
+
+  const { views, orders, likes, revenue, by_product } = app.stats;
+
+  type StatRow = {
+    key: string;
+    product: SellerProduct | undefined;
+    views: number;
+    orders: number;
+    likes: number;
+    revenue: number;
+  };
+
+  const rows: StatRow[] = by_product.map(ps => ({
+    key: ps.product_id,
+    product: allProducts.find(p => p.id === ps.product_id),
+    views: ps.views,
+    orders: ps.orders,
+    likes: ps.likes,
+    revenue: ps.revenue,
+  }));
+
+  const columns = [
+    {
+      title: 'Товар',
+      dataIndex: 'product',
+      key: 'product',
+      render: (p: SellerProduct | undefined) => p ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img src={p.image_url} alt={p.name} style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 6, flexShrink: 0, background: '#f0f0f0' }} />
+          <div>
+            <Text style={{ fontSize: 12, display: 'block' }}>{p.name}</Text>
+            <Text type="secondary" style={{ fontSize: 11 }}>Арт. {p.article}</Text>
+          </div>
+        </div>
+      ) : '—',
+    },
+    {
+      title: <Space size={4}><EyeOutlined style={{ color: '#6B4EFF' }} /><span>Просмотры</span></Space>,
+      dataIndex: 'views',
+      key: 'views',
+      align: 'right' as const,
+      render: (v: number) => <Text strong style={{ fontSize: 13 }}>{formatViews(v)}</Text>,
+    },
+    {
+      title: <Space size={4}><ShoppingCartOutlined style={{ color: '#52c41a' }} /><span>Заказы</span></Space>,
+      dataIndex: 'orders',
+      key: 'orders',
+      align: 'right' as const,
+      render: (v: number) => <Text strong style={{ fontSize: 13 }}>{v.toLocaleString('ru-RU')}</Text>,
+    },
+    {
+      title: <Space size={4}><HeartOutlined style={{ color: '#ff4d4f' }} /><span>Лайки</span></Space>,
+      dataIndex: 'likes',
+      key: 'likes',
+      align: 'right' as const,
+      render: (v: number) => <Text strong style={{ fontSize: 13 }}>{formatViews(v)}</Text>,
+    },
+    {
+      title: <Space size={4}><RiseOutlined style={{ color: '#fa8c16' }} /><span>Выручка</span></Space>,
+      dataIndex: 'revenue',
+      key: 'revenue',
+      align: 'right' as const,
+      render: (v: number) => <Text strong style={{ fontSize: 13, color: '#fa8c16' }}>{v.toLocaleString('ru-RU')} ₽</Text>,
+    },
+  ];
+
+  return (
+    <Card
+      title={<Text strong style={{ fontSize: 15 }}>Статистика продвижения</Text>}
+      styles={{ body: { padding: '0' }, header: { padding: '14px 20px' } }}
+      style={{ borderRadius: 8 }}
+    >
+      <Table
+        dataSource={rows}
+        columns={columns}
+        pagination={false}
+        size="small"
+        summary={() => (
+          <Table.Summary.Row style={{ background: '#faf9ff' }}>
+            <Table.Summary.Cell index={0}>
+              <Text strong style={{ fontSize: 12 }}>Итого</Text>
+            </Table.Summary.Cell>
+            <Table.Summary.Cell index={1} align="right">
+              <Text strong style={{ fontSize: 13 }}>{formatViews(views)}</Text>
+            </Table.Summary.Cell>
+            <Table.Summary.Cell index={2} align="right">
+              <Text strong style={{ fontSize: 13 }}>{orders.toLocaleString('ru-RU')}</Text>
+            </Table.Summary.Cell>
+            <Table.Summary.Cell index={3} align="right">
+              <Text strong style={{ fontSize: 13 }}>{formatViews(likes)}</Text>
+            </Table.Summary.Cell>
+            <Table.Summary.Cell index={4} align="right">
+              <Text strong style={{ fontSize: 13, color: '#fa8c16' }}>{revenue.toLocaleString('ru-RU')} ₽</Text>
+            </Table.Summary.Cell>
+          </Table.Summary.Row>
+        )}
+      />
+    </Card>
+  );
+}
+
 function ExistingAppDetail({
   app, slot, allProducts, productsLoading,
 }: {
@@ -625,9 +744,16 @@ function ExistingAppDetail({
         <Divider style={{ margin: '0 0 16px' }} />
 
         {/* Selected products */}
-        <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 12 }}>
-          <ShoppingOutlined style={{ marginRight: 6 }} />Выбранные товары ({app.product_ids.length})
-        </Text>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <ShoppingOutlined style={{ marginRight: 6 }} />Предложенные товары ({app.product_ids.length})
+          </Text>
+          {app.accepted_product_ids !== null && app.accepted_product_ids.length !== app.product_ids.length && (
+            <Tag color="purple" style={{ margin: 0, fontSize: 11 }}>
+              Блогер принял {app.accepted_product_ids.length} из {app.product_ids.length}
+            </Tag>
+          )}
+        </div>
 
         {productsLoading ? (
           <Skeleton active paragraph={{ rows: 2 }} />
@@ -635,21 +761,28 @@ function ExistingAppDetail({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {selectedProducts.map(p => {
               const isGift = app.gift_product_ids.includes(p.id);
+              const isAccepted = app.accepted_product_ids === null || app.accepted_product_ids.includes(p.id);
               return (
                 <div key={p.id} style={{
                   display: 'flex', alignItems: 'center', gap: 12,
                   padding: '10px 14px',
-                  background: isGift ? '#fff7e6' : '#f9f9ff',
+                  background: !isAccepted ? '#fafafa' : isGift ? '#fff7e6' : '#f9f9ff',
                   borderRadius: 8,
-                  border: `1px solid ${isGift ? '#ffd591' : '#ece9ff'}`,
+                  border: `1px solid ${!isAccepted ? '#f0f0f0' : isGift ? '#ffd591' : '#ece9ff'}`,
+                  opacity: isAccepted ? 1 : 0.55,
                 }}>
                   <img src={p.image_url} alt={p.name} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6, flexShrink: 0, background: '#f0f0f0' }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <Text style={{ fontSize: 13, display: 'block' }}>{p.name}</Text>
                     <Text type="secondary" style={{ fontSize: 11 }}>Арт. {p.article} · {p.category} · {p.price.toLocaleString('ru-RU')} ₽</Text>
                   </div>
-                  {isGift && (
-                    <Tag icon={<GiftOutlined />} color="orange" style={{ margin: 0, fontSize: 11 }}>Подарок блогеру</Tag>
+                  {app.accepted_product_ids !== null && (
+                    isAccepted
+                      ? <Tag color="success" style={{ margin: 0, fontSize: 11 }}>Принят</Tag>
+                      : <Tag color="default" style={{ margin: 0, fontSize: 11 }}>Не принят</Tag>
+                  )}
+                  {isAccepted && isGift && (
+                    <Tag icon={<GiftOutlined />} color="orange" style={{ margin: 0, fontSize: 11 }}>Подарок</Tag>
                   )}
                 </div>
               );
@@ -657,6 +790,8 @@ function ExistingAppDetail({
           </div>
         )}
       </Card>
+
+      <StatsTable app={app} allProducts={allProducts} />
     </div>
   );
 }

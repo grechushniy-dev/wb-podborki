@@ -9,17 +9,28 @@ function ActionButtons({ app }: { app: Application }) {
   const { mutate: changeStatus, isPending } = useDevChangeStatus();
 
   if (app.status === 'pending') {
+    const hasMultiple = app.product_ids.length > 1;
     return (
-      <Space>
+      <Space wrap>
         <Button
           size="small"
           type="primary"
           icon={<CheckOutlined />}
           loading={isPending}
-          onClick={() => changeStatus({ id: app.id, status: 'approved' })}
+          onClick={() => changeStatus({ id: app.id, status: 'approved', accepted_product_ids: app.product_ids })}
         >
-          Одобрить
+          {hasMultiple ? 'Одобрить все' : 'Одобрить'}
         </Button>
+        {hasMultiple && (
+          <Button
+            size="small"
+            icon={<CheckOutlined />}
+            loading={isPending}
+            onClick={() => changeStatus({ id: app.id, status: 'approved', accepted_product_ids: [app.product_ids[0]] })}
+          >
+            Одобрить первый
+          </Button>
+        )}
         <Button
           size="small"
           danger

@@ -113,8 +113,11 @@ export const handlers = [
       shipped_at: null,
       post_url: null,
       published_at: null,
+      accepted_product_ids: null,
       rejected_at: null,
+      rejected_reason: null,
       created_at: new Date().toISOString(),
+      stats: null,
     };
     applications = [...applications, newApp];
 
@@ -161,7 +164,7 @@ export const handlers = [
   // PATCH /api/dev/applications/:id/status  — DEV ONLY, симуляция действий блогера
   http.patch('/api/dev/applications/:id/status', async ({ params, request }) => {
     await delay(300);
-    const body = await request.json() as { status: ApplicationStatus; post_url?: string };
+    const body = await request.json() as { status: ApplicationStatus; post_url?: string; accepted_product_ids?: string[] };
     const app = applications.find(a => a.id === params.id);
     if (!app) {
       return HttpResponse.json({ message: 'Not found' }, { status: 404 });
@@ -172,6 +175,9 @@ export const handlers = [
       const updates: Partial<Application> = {
         status: body.status,
       };
+      if (body.status === 'approved') {
+        updates.accepted_product_ids = body.accepted_product_ids ?? a.product_ids;
+      }
       if (body.status === 'published') {
         updates.post_url = body.post_url ?? `https://www.wildberries.ru/influencer/post/${Date.now()}`;
         updates.published_at = now;

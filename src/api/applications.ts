@@ -95,11 +95,11 @@ export function useShipApplication() {
 export function useDevChangeStatus() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, status, post_url }: { id: string; status: ApplicationStatus; post_url?: string }) => {
+    mutationFn: async ({ id, status, post_url, accepted_product_ids }: { id: string; status: ApplicationStatus; post_url?: string; accepted_product_ids?: string[] }) => {
       const res = await fetch(`/api/dev/applications/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, post_url }),
+        body: JSON.stringify({ status, post_url, accepted_product_ids }),
       });
       if (!res.ok) throw new Error('Dev status change failed');
       const json = await res.json() as { data: Application };
